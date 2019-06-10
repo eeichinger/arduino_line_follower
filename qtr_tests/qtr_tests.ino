@@ -17,7 +17,7 @@ QTRSensors qtr;
 const uint8_t SensorCount = 2;
 uint16_t sensorValues[SensorCount];
 
-uint16_t maxVal = 0, minVal = 1024;
+const QTRReadMode readMode = QTRReadMode::On;
 
 void setup()
 {
@@ -34,24 +34,13 @@ void setup()
   // calibrate
   Serial.println("");
   Serial.println("Start Calibration");
+  Serial.println("get ready to wiggle robot");
   // TODO: make robot "wiggle"
   delay(2000);
+  Serial.println("wiggle robot now");
   for (int i = 0; i < 250; i++) {
-    Serial.println("");
-    Serial.print("Measuring");
-    // read raw sensor values
-    qtr.read(sensorValues);
-    if (sensorValues[0] > maxVal) maxVal = sensorValues[0];
-    if (sensorValues[0] < minVal) minVal = sensorValues[0];
-    Serial.println("");
-    Serial.print("[ max=");
-    Serial.print(maxVal);
-    Serial.print(",\tmin=");
-    Serial.print(minVal);
-    Serial.print(" ]");
-    printSensorValues(sensorValues);
-
-    delay(25);
+    qtr.calibrate(readMode);
+    delay(20);
   }
   Serial.println("Finished Calibration");
   delay(2000);
@@ -73,8 +62,17 @@ void loop()
   Serial.println();
 
   // read raw sensor values
-  qtr.read(sensorValues);
-
+  uint16_t pos = qtr.readLineBlack(sensorValues, readMode);
+  Serial.print(pos);
+  if (pos == 0) {
+    pos = sensorValues[0];
+  } else if (pos == 1000) {
+    pos = pos + sensorValues[1];
+  } else {
+    pos = pos + 1000;
+  }
+  Serial.print(", ");
+  Serial.print(pos);
   printSensorValues(sensorValues);
-  delay(100);
+  delay(1000);
 }
