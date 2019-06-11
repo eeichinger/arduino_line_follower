@@ -24,7 +24,7 @@ void setup()
   // configure the sensors
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]) {
-    A0, A1
+    A2, A3
   }, SensorCount);
   //  qtr.setEmitterPin(2);
 
@@ -57,22 +57,29 @@ void printSensorValues(uint16_t sensorValues[]) {
   Serial.print(" ]");
 }
 
+uint16_t calcPos() {
+  // read raw sensor values
+  uint16_t pos = qtr.readLineBlack(sensorValues, readMode);
+  Serial.print("pos1: ");
+  Serial.print(pos);
+  if (pos == 0) {
+    pos = sensorValues[0];
+  } else if (pos == 1000) {    
+    pos = 3000 - sensorValues[1];
+  } else {
+    pos = pos + 1000;
+  }  
+  return pos*3.33;
+}
+
 void loop()
 {
   Serial.println();
 
   // read raw sensor values
-  uint16_t pos = qtr.readLineBlack(sensorValues, readMode);
-  Serial.print(pos);
-  if (pos == 0) {
-    pos = sensorValues[0];
-  } else if (pos == 1000) {
-    pos = pos + sensorValues[1];
-  } else {
-    pos = pos + 1000;
-  }
-  Serial.print(", ");
+  uint16_t pos = calcPos();
+  Serial.print(", pos2: ");
   Serial.print(pos);
   printSensorValues(sensorValues);
-  delay(1000);
+  delay(100);
 }
