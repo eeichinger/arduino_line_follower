@@ -45,7 +45,6 @@ void setup() {
 
   mode = digitalRead(PIN_MODE);
 
-  mode = 0;
   // calibrate
   Serial.println("");
   Serial.println("Start Calibration");
@@ -72,10 +71,10 @@ void setup() {
   Serial.println("");
   Serial.println("searching line");
   int pos = 0;
-  while (pos < 4000) {
+  while (pos < 500) {
     Serial.print("cali-pos=");
     //    qtr.calibrate(readMode);
-    pos = calcPos10000(); //qtr.readLineBlack(sensorValues, readMode);
+    pos = calcPos1000(); //qtr.readLineBlack(sensorValues, readMode);
     Serial.print("cali-pos=");
     Serial.println(pos);
     setSpeed(100, -100);
@@ -86,10 +85,10 @@ void setup() {
   pos = qtr.readLineBlack(sensorValues, readMode);
   Serial.print("cali-pos=");
   Serial.println(pos);
-  delay(5000);
-  pos = qtr.readLineBlack(sensorValues, readMode);
-  Serial.print("cali-pos=");
-  Serial.println(pos);
+//  delay(1000);
+//  pos = qtr.readLineBlack(sensorValues, readMode);
+//  Serial.print("cali-pos=");
+//  Serial.println(pos);
 }
 
 void stopIfFault()
@@ -168,31 +167,32 @@ void setSpeed(int m1, int m2) {
 //  }
 //}
 
-uint16_t calcPos10000() {
+uint16_t calcPos1000() {
   // read raw sensor values
   uint16_t pos = qtr.readLineBlack(sensorValues, readMode);
   Serial.print("pos1: ");
   Serial.print(pos);
-  if (pos == 0) {
-    pos = sensorValues[0];
-  } else if (pos == 1000) {
-    pos = 3000 - sensorValues[1];
-  } else {
-    pos = pos + 1000;
-  }
-  return pos * 3.333;
+  return pos;
+//  if (pos == 0) {
+//    pos = sensorValues[0];
+//  } else if (pos == 1000) {
+//    pos = 3000 - sensorValues[1];
+//  } else {
+//    pos = pos + 1000;
+//  }
+//  return pos * 3.333;
 }
 
 int lastError = 0;
-const int kp = 25;
-const int kd = 25;
+const float kp = 1;
+const float kd = 0.3;
 
 //int whiteCount = 0;
 // stolen from https://github.com/pololu/zumo-32u4-arduino-library/blob/master/examples/LineFollower/LineFollower.ino
 void proportional_algo(int v) {
   // read raw sensor values
-  int pos = calcPos10000(); //qtr.readLineBlack(sensorValues, readMode);
-  if (sensorValues[0] < 30 && sensorValues[1] < 30) {
+  int pos = calcPos1000(); //qtr.readLineBlack(sensorValues, readMode);
+  if (sensorValues[0] < 50 && sensorValues[1] < 50) {
     if (whiteCount > 5) {
       //     lost line, stop
       setSpeed(0, 0);
@@ -203,9 +203,11 @@ void proportional_algo(int v) {
   } else {
     whiteCount = 0;
   }
-  int error = pos - 5000;
-
-  int speedDifference = error / kp + (error - lastError) / kd;
+  
+  int error = pos - 500;
+//  int err_sgn = error/abs(error);
+//  error = error*error*err_sgn;
+  int speedDifference = error * kp + (error - lastError) * kd;
 
   int leftSpeed = v + speedDifference;
   int rightSpeed = v - speedDifference;
@@ -216,8 +218,8 @@ void proportional_algo(int v) {
   // else it will be stationary.  For some applications, you
   // might want to allow the motor speed to go negative so that
   // it can spin in reverse.
-  leftSpeed = constrain(leftSpeed, 0, 400);
-  rightSpeed = constrain(rightSpeed, 0, 400);
+  leftSpeed = constrain(leftSpeed, 0, v);
+  rightSpeed = constrain(rightSpeed, 0, v);
 
   setSpeed(-leftSpeed, -rightSpeed);
 
@@ -238,13 +240,13 @@ void proportional_algo(int v) {
 }
 
 void loop() {
-//  delay(100);
+  delay(10);
 
   stopIfFault();
 
   mode = digitalRead(PIN_MODE);
   int pot_sensitivity = analogRead(PIN_POT_SENSITIVITY);
-  int v = 300; //map(pot_sensitivity, 0, 1023, 0, maxSpeed); // driver goes up to -400/400
+  int v = 400; //map(pot_sensitivity, 0, 1023, 0, maxSpeed); // driver goes up to -400/400
 
   Serial.println("");
   if (mode == 1) {
