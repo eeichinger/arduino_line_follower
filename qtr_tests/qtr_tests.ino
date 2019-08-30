@@ -43,7 +43,7 @@ void setup()
     delay(20);
   }
   Serial.println("Finished Calibration");
-  delay(2000);
+//  delay(2000);
 }
 
 void printSensorValues(uint16_t sensorValues[]) {
@@ -60,16 +60,19 @@ void printSensorValues(uint16_t sensorValues[]) {
 uint16_t calcPos() {
   // read raw sensor values
   uint16_t pos = qtr.readLineBlack(sensorValues, readMode);
-  Serial.print("pos1: ");
-  Serial.print(pos);
-  if (pos == 0) {
-    pos = sensorValues[0];
-  } else if (pos == 1000) {    
-    pos = 3000 - sensorValues[1];
-  } else {
-    pos = pos + 1000;
-  }  
-  return pos*3.33;
+//  Serial.print("pos1: ");
+//  Serial.print(pos);
+//  pos = (sensorValues[0] + sensorValues[1] * 1000)/(sensorValues[0] + sensorValues[1]);
+//  Serial.print("pos15: ");
+//  Serial.print(pos);
+//  if (pos == 0) {
+//    pos = sensorValues[0];
+//  } else if (pos == 1000) {    
+//    pos = 3000 - sensorValues[1];
+//  } else {
+//    pos = pos + 1000;
+//  }  
+  return pos;
 }
 
 void loop()
@@ -81,5 +84,8 @@ void loop()
   Serial.print(", pos2: ");
   Serial.print(pos);
   printSensorValues(sensorValues);
+  int error = pos - 500;
+  Serial.print(", error: ");
+  Serial.print(error);  
   delay(100);
 }
